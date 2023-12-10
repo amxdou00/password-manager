@@ -11,6 +11,7 @@ from functions import check_password_policy
 from functions import hash_string
 from functions import encrypt
 from functions import decrypt
+from functions import display_entries
 
 if (os.path.getsize("./.key")==0):
     # Reading config file
@@ -78,7 +79,7 @@ else:
             print("[1] - Create a new password entry")
             print("[2] - Edit a password entry")
             print("[3] - Delete a password entry")
-            print("[4] - Search for an entry")
+            print("[4] - Search by account name")
             print("[5] - Display all the entries")
             print("[6] - Exit")
             choice = int(input("--> "))
@@ -133,31 +134,76 @@ else:
 
             elif(choice == 2):
                 os.system("clear")
+                entry_number = int(input("Please enter the entry number --> "))
+
+                # Appending new entry at the end of the file
+                with open("./.passwords", "r+") as pass_file:
+                    lines = pass_file.readlines()
+
+                line_number = 1
+                dec_entry_dict = {}
+                for line in lines:
+                    if entry_number == line_number:
+                        dec_entry = decrypt(line.strip(), key)
+                        dec_entry_dict = json.loads(dec_entry)
+                        for dict_key in dec_entry_dict.keys():
+                            if(dict_key == "password"):
+                                dec_entry_dict[dict_key] = getpass.getpass(prompt = f"{dict_key}: ")
+                            else:
+                                dec_entry_dict[dict_key] = input(f"{dict_key}: ")
+                        break
+                    else:
+                        line_number += 1
+                        continue
+
+                # Converting the dictionary into json string
+                json_string = json.dumps(dec_entry_dict, indent=4)
+
+                # Encrypting the json string with the key
+                enc_json_string = encrypt(json_string, key)
+
+                # Writing the encrypted json string into the .password file
+                with open("./.passwords", "a") as pass_file:
+                    pass_file.write(enc_json_string + '\n')
+
+                time.sleep(3)
+
+                # Deleting the old entry
+                with open("./.passwords", "r") as pass_file:
+                    lines = pass_file.readlines()
+                lines[entry_number-1] = ""
+                with open("./.passwords", "w") as pass_file:
+                    pass_file.writelines(lines)
+
+                time.sleep(5)
 
             elif(choice == 3):
                 os.system("clear")
+                entry_number = int(input("Please enter the entry number --> "))
+                with open("./.passwords", "r") as pass_file:
+                    lines = pass_file.readlines()
+                lines[entry_number-1] = ""
+                with open("./.passwords", "w") as pass_file:
+                    pass_file.writelines(lines)
+
+                print("[+] The entry has been deleted")
+                time.sleep(5)
 
             elif(choice == 4):
                 os.system("clear")
+
             elif(choice == 5):
                 os.system("clear")
                 print("Here are all the saved entries:")
-                
-                # Retrieving the encrypted data from .passwords file
-                entries = []
-                with open("./.passwords", "r") as pass_file:
-                    entries = pass_file.readlines()
-                
-                for entry in entries:
-                    dec_entry = decrypt(entry.strip(), key)
-                    print(dec_entry)
-                time.sleep(10)
+                display_entries(key)
+                time.sleep(5)
+
             else:
                 print("Goodbye")
                 sys.exit()
-        else:
-            print("Wrong password, Goodbye!")
-            sys.exit()
+    else:
+        print("Wrong password, Goodbye!")
+        sys.exit()
 
 
 

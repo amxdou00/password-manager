@@ -69,3 +69,17 @@ def decrypt(string, key):
 
 
 	return "".join(string_list)
+
+def display_entries(key):
+    # Retrieving the encrypted data from .passwords file
+    entries = []
+    with open("./.passwords", "r") as pass_file:
+        entries = pass_file.readlines()
+    
+    index = 1
+    for entry in entries:
+        dec_entry = decrypt(entry.strip(), key)
+        print(f"Entry {index}")
+        print(dec_entry)
+        print()
+        index += 1
